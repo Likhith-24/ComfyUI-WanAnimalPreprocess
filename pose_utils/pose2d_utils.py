@@ -193,7 +193,7 @@ class AAPoseMeta:
 
     def draw_animal_pose(self, img, threshold=0.5, stick_width_norm=200, draw_head=True):
         """Draw animal pose for AP10k format"""
-        from .human_visualization import draw_animal_pose_by_meta
+        from .animal_visualization import draw_animal_pose_by_meta
         return draw_animal_pose_by_meta(img, self, threshold, stick_width_norm, draw_head)
 
 

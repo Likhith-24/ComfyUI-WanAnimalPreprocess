@@ -25,7 +25,7 @@ folder_paths.add_model_folder_path("detection", os.path.join(folder_paths.models
 from .models.onnx_models import ViTPose, Yolo
 from .pose_utils.pose2d_utils import load_pose_metas_from_kp2ds_seq, crop, bbox_from_detector
 from .utils import padding_resize, resize_by_area, resize_to_bounds
-from .pose_utils.human_visualization import AAPoseMeta, draw_animal_pose_by_meta
+from .pose_utils.animal_visualization import AAPoseMeta, draw_animal_pose_by_meta
 from .retarget_pose import get_retarget_pose
 
 # COCO class IDs (1-indexed) for animals detectable by YOLOv8

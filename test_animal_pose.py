@@ -125,7 +125,7 @@ test("keypoints_from_heatmaps()", test_keypoints_from_heatmaps)
 print("\n[2] pose_utils/human_visualization.py")
 
 def test_draw_animal_pose():
-    from pose_utils.human_visualization import draw_animal_pose
+    from pose_utils.animal_visualization import draw_animal_pose
     canvas = np.zeros((480, 640, 3), dtype=np.uint8)
     # Fake 17 keypoints in pixel coordinates
     kp2ds = np.zeros((17, 3))
@@ -140,7 +140,7 @@ test("draw_animal_pose() draws on canvas", test_draw_animal_pose)
 
 
 def test_draw_animal_pose_by_meta():
-    from pose_utils.human_visualization import draw_animal_pose_by_meta, AAPoseMeta
+    from pose_utils.animal_visualization import draw_animal_pose_by_meta, AAPoseMeta
     meta = AAPoseMeta()
     meta.width = 640
     meta.height = 480
@@ -161,7 +161,7 @@ test("draw_animal_pose_by_meta() with ap10k and apt36k", test_draw_animal_pose_b
 
 
 def test_draw_skeleten():
-    from pose_utils.human_visualization import draw_skeleten
+    from pose_utils.animal_visualization import draw_skeleten
     meta = {
         'width': 640,
         'height': 480,
@@ -174,7 +174,7 @@ test("draw_skeleten() from meta dict", test_draw_skeleten)
 
 
 def test_animal_skeleton_constants():
-    from pose_utils.human_visualization import (
+    from pose_utils.animal_visualization import (
         ANIMAL_LIMB_SEQ, ANIMAL_HEAD_LIMBS,
         ANIMAL_LIMB_COLORS, ANIMAL_HEAD_COLORS, ANIMAL_KP_COLORS
     )
