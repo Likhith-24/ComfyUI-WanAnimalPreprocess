@@ -1,12 +1,21 @@
 [project]
-name = "ComfyUI-WanAnimalPreprocess"
+name = "comfyui-wananimalpreprocess"
 description = "ComfyUI nodes for animal pose estimation and preprocessing using AP10k/APT36k ViTPose models"
-version = "1.0.1"
+version = "1.1.0"
 license = {file = "LICENSE"}
-dependencies = ["opencv-python", "onnxruntime-gpu", "onnx"]
+requires-python = ">=3.10"
+authors = [{ name = "Likhith-24" }]
+dependencies = [
+    "opencv-python>=4.8",
+    "onnxruntime-gpu>=1.16",
+    "onnx>=1.15",
+    "numpy>=1.24",
+    "pillow>=10.0",
+]
 
 [project.urls]
-Repository = "https://github.com/Likhith-24/ComfyUI-WanAnimalPreprocess"
+Repository = "https://github.com/Likhith-24/ComfyUI-WanAnimalPreprocessor"
+Issues = "https://github.com/Likhith-24/ComfyUI-WanAnimalPreprocessor/issues"
 #  Used by Comfy Registry https://comfyregistry.org
 
 [tool.comfy]
