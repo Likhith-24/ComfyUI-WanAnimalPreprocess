@@ -1,7 +1,7 @@
 [project]
 name = "ComfyUI-WanAnimalPreprocess"
 description = "ComfyUI nodes for animal pose estimation and preprocessing using AP10k/APT36k ViTPose models"
-version = "1.1.2"
+version = "1.2.0"
 license = {file = "LICENSE"}
 requires-python = ">=3.10"
 authors = [{ name = "Likhith-24" }]
