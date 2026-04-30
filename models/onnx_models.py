@@ -4,18 +4,66 @@ import cv2
 import numpy as np
 import torch
 import onnxruntime
+import logging
+import os
 
 from ..pose_utils.pose2d_utils import box_convert_simple, keypoints_from_heatmaps
+
+
+def _normalize_onnx_provider(device):
+    """MANUAL bug-fix (Apr 2026): normalize common aliases ('cuda', 'cpu',
+    'tensorrt') to their official onnxruntime provider names. Previously
+    a default of ``device='cuda'`` would propagate through unchanged and
+    silently fall back to CPU because 'cuda' is not a valid provider name.
+    """
+    if not isinstance(device, str):
+        return device
+    alias = {
+        'cuda': 'CUDAExecutionProvider',
+        'gpu': 'CUDAExecutionProvider',
+        'cpu': 'CPUExecutionProvider',
+        'tensorrt': 'TensorrtExecutionProvider',
+        'trt': 'TensorrtExecutionProvider',
+    }
+    return alias.get(device.lower(), device)
+
 
 class SimpleOnnxInference(object):
     def __init__(self, checkpoint, device='CUDAExecutionProvider', **kwargs):
         # Store initialization parameters for potential reinit
         self.checkpoint = checkpoint
         self.init_kwargs = kwargs
+
+        # MANUAL bug-fix (Apr 2026): normalize device aliases and verify the
+        # requested provider is actually available. Previously the session
+        # would silently fall back to CPU when 'cuda' was passed (alias bug)
+        # or when CUDAExecutionProvider was requested but onnxruntime-cpu
+        # was installed instead of onnxruntime-gpu.
+        device = _normalize_onnx_provider(device)
+        available = onnxruntime.get_available_providers()
+        if device not in available:
+            logging.getLogger(__name__).warning(
+                "Requested ONNX provider %r is not available. Available: %s. "
+                "Falling back to CPUExecutionProvider. To enable GPU: "
+                "pip install onnxruntime-gpu (and ensure CUDA toolkit matches).",
+                device, available,
+            )
+            device = 'CPUExecutionProvider'
+
         provider = [device, 'CPUExecutionProvider'] if device == 'CUDAExecutionProvider' else [device]
 
         self.provider = provider
         self.session = onnxruntime.InferenceSession(checkpoint, providers=provider)
+
+        # Verify the session actually used the requested provider.
+        active = self.session.get_providers()
+        if device == 'CUDAExecutionProvider' and 'CUDAExecutionProvider' not in active:
+            logging.getLogger(__name__).warning(
+                "ONNX session for %s requested CUDAExecutionProvider but "
+                "onnxruntime selected %s. Inference will run on CPU.",
+                os.path.basename(checkpoint), active,
+            )
+
         self.input_name = self.session.get_inputs()[0].name
         self.output_name = self.session.get_outputs()[0].name
         self.input_resolution = self.session.get_inputs()[0].shape[2:]
