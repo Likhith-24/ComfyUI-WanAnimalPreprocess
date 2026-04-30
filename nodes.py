@@ -62,6 +62,7 @@ class OnnxAnimalDetectionModelLoader:
 
     RETURN_TYPES = ("POSEMODEL",)
     RETURN_NAMES = ("model",)
+    OUTPUT_TOOLTIPS = ("Animal pose model bundle (ViTPose+YOLO+dataset). Connect to `model` on Animal Pose and Detection.",)
     FUNCTION = "loadmodel"
     CATEGORY = "WanAnimalPreprocess"
     DESCRIPTION = "Loads ONNX models for animal pose detection. Supports both AP10k and APT36k datasets (both use 17 keypoints). Select the dataset matching your ViTPose model."
@@ -87,8 +88,8 @@ class AnimalPoseAndDetection:
     def INPUT_TYPES(s):
         return {
             "required": {
-                "model": ("POSEMODEL",),
-                "images": ("IMAGE",),
+                "model":  ("POSEMODEL", {"tooltip": "From ONNX Animal Detection Model Loader."}),
+                "images": ("IMAGE",     {"tooltip": "Input video frames as IMAGE batch."}),
                 "width": ("INT", {"default": 832, "min": 64, "max": 2048, "step": 1,
                                    "tooltip": "Width of the generation"}),
                 "height": ("INT", {"default": 480, "min": 64, "max": 2048, "step": 1,
@@ -102,6 +103,11 @@ class AnimalPoseAndDetection:
 
     RETURN_TYPES = ("POSEDATA", "STRING", "BBOX")
     RETURN_NAMES = ("pose_data", "key_frame_body_points", "bboxes")
+    OUTPUT_TOOLTIPS = (
+        "Animal pose dict bundle. Feed into Draw Animal ViT Pose.",
+        "Key-frame body keypoints as JSON string.",
+        "Per-frame body BBOX list.",
+    )
     FUNCTION = "process"
     CATEGORY = "WanAnimalPreprocess"
     DESCRIPTION = "Detects animal poses from images using ViTPose (AP10k/APT36k) and YOLO. Optionally retargets poses based on a reference image."
@@ -239,7 +245,7 @@ class DrawAnimalViTPose:
     def INPUT_TYPES(s):
         return {
             "required": {
-                "pose_data": ("POSEDATA",),
+                "pose_data": ("POSEDATA", {"tooltip": "From Animal Pose and Detection."}),
                 "width": ("INT", {"default": 832, "min": 64, "max": 2048, "step": 1,
                                    "tooltip": "Width of the generation"}),
                 "height": ("INT", {"default": 480, "min": 64, "max": 2048, "step": 1,
@@ -255,6 +261,7 @@ class DrawAnimalViTPose:
 
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("pose_images",)
+    OUTPUT_TOOLTIPS = ("Rendered animal-skeleton IMAGE batch. Feed into Wan-Animate sampler.",)
     FUNCTION = "process"
     CATEGORY = "WanAnimalPreprocess"
     DESCRIPTION = "Draws animal pose skeleton images from pose data (AP10k/APT36k format)."
@@ -308,12 +315,16 @@ class AnimalPoseRetargetPromptHelper:
     def INPUT_TYPES(s):
         return {
             "required": {
-                "pose_data": ("POSEDATA",),
+                "pose_data": ("POSEDATA", {"tooltip": "From Animal Pose and Detection."}),
             },
         }
 
     RETURN_TYPES = ("STRING", "STRING")
     RETURN_NAMES = ("prompt", "retarget_prompt")
+    OUTPUT_TOOLTIPS = (
+        "Sampler prompt describing visible legs of the template animal.",
+        "Retarget prompt for the reference animal in the same convention.",
+    )
     FUNCTION = "process"
     CATEGORY = "WanAnimalPreprocess"
     DESCRIPTION = "Generates text prompts for animal pose retargeting based on visibility of limbs in the template pose."
@@ -366,8 +377,8 @@ class AnimalPoseDetectionOneToAllAnimation:
     def INPUT_TYPES(s):
         return {
             "required": {
-                "model": ("POSEMODEL",),
-                "images": ("IMAGE",),
+                "model":  ("POSEMODEL", {"tooltip": "From ONNX Animal Detection Model Loader."}),
+                "images": ("IMAGE",     {"tooltip": "Input video frames as IMAGE batch."}),
                 "width": ("INT", {"default": 832, "min": 64, "max": 2048, "step": 2,
                                    "tooltip": "Width of the generation"}),
                 "height": ("INT", {"default": 480, "min": 64, "max": 2048, "step": 2,
@@ -385,6 +396,12 @@ class AnimalPoseDetectionOneToAllAnimation:
 
     RETURN_TYPES = ("IMAGE", "IMAGE", "IMAGE", "MASK")
     RETURN_NAMES = ("pose_images", "ref_pose_image", "ref_image", "ref_mask")
+    OUTPUT_TOOLTIPS = (
+        "Per-frame rendered pose IMAGE batch.",
+        "Pose image rendered from the reference frame (single image).",
+        "The retargeted reference IMAGE.",
+        "Foreground MASK for the reference subject.",
+    )
     FUNCTION = "process"
     CATEGORY = "WanAnimalPreprocess"
     DESCRIPTION = "Specialized animal pose detection and alignment for OneToAllAnimation model. Detects animal poses from input images and aligns them based on a reference image if provided."
