@@ -4,7 +4,7 @@ description = "ComfyUI nodes for animal pose estimation and preprocessing using 
 version = "1.2.0"
 license = {file = "LICENSE"}
 requires-python = ">=3.10"
-authors = [{ name = "Likhith-24" }]
+authors = [{ name = "Code2Collapse" }]
 dependencies = [
     "opencv-python>=4.8",
     "onnxruntime-gpu>=1.16",
@@ -14,11 +14,11 @@ dependencies = [
 ]
 
 [project.urls]
-Repository = "https://github.com/Likhith-24/ComfyUI-WanAnimalPreprocessor"
-Issues = "https://github.com/Likhith-24/ComfyUI-WanAnimalPreprocessor/issues"
+Repository = "https://github.com/Code2Collapse/ComfyUI-WanAnimalPreprocess"
+Issues = "https://github.com/Code2Collapse/ComfyUI-WanAnimalPreprocess/issues"
 #  Used by Comfy Registry https://comfyregistry.org
 
 [tool.comfy]
-PublisherId = "likhith-24"
+PublisherId = "Code2Collapse"
 DisplayName = "ComfyUI-WanAnimalPreprocess"
 Icon = "https://i.pinimg.com/736x/5d/52/19/5d5219ef27c1530bea027ff95d352e05.jpg"
