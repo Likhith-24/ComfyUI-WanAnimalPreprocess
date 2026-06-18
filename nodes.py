@@ -13,6 +13,8 @@ import json
 import logging
 
 from . import _interrupt_check as _IC
+from ._is_changed_util import hash_args_and_kwargs
+
 script_directory = os.path.dirname(os.path.abspath(__file__))
 
 from comfy import model_management as mm
@@ -33,6 +35,18 @@ from .retarget_pose import get_retarget_pose
 # bird(15), cat(16), dog(17), horse(18), sheep(19), cow(20),
 # elephant(21), bear(22), zebra(23), giraffe(24)
 ANIMAL_CAT_IDS = [15, 16, 17, 18, 19, 20, 21, 22, 23, 24]
+
+
+def _validate_image_batch(tensor, name="IMAGE"):
+    if not isinstance(tensor, torch.Tensor) or tensor.ndim != 4 or tensor.shape[-1] != 3:
+        raise ValueError(
+            f"{name}: expected IMAGE tensor [B,H,W,3]; got {tuple(getattr(tensor, 'shape', ()))}"
+        )
+
+
+def _validate_optional_image_batch(tensor, name="IMAGE"):
+    if tensor is not None:
+        _validate_image_batch(tensor, name)
 
 
 class OnnxAnimalDetectionModelLoader:
@@ -68,7 +82,15 @@ class OnnxAnimalDetectionModelLoader:
     CATEGORY = "WanAnimalPreprocess"
     DESCRIPTION = "Loads ONNX models for animal pose detection. Supports both AP10k and APT36k datasets (both use 17 keypoints). Select the dataset matching your ViTPose model."
 
+    @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        return hash_args_and_kwargs(**kwargs)
+
     def loadmodel(self, vitpose_model, yolo_model, dataset, onnx_device):
+        with torch.inference_mode():
+            return self._loadmodel_impl(vitpose_model, yolo_model, dataset, onnx_device)
+
+    def _loadmodel_impl(self, vitpose_model, yolo_model, dataset, onnx_device):
         vitpose_model_path = folder_paths.get_full_path_or_raise("detection", vitpose_model)
         yolo_model_path = folder_paths.get_full_path_or_raise("detection", yolo_model)
 
@@ -113,7 +135,17 @@ class AnimalPoseAndDetection:
     CATEGORY = "WanAnimalPreprocess"
     DESCRIPTION = "Detects animal poses from images using ViTPose (AP10k/APT36k) and YOLO. Optionally retargets poses based on a reference image."
 
+    @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        return hash_args_and_kwargs(**kwargs)
+
     def process(self, model, images, width, height, retarget_image=None):
+        _validate_image_batch(images, "AnimalPoseAndDetection.images")
+        _validate_optional_image_batch(retarget_image, "AnimalPoseAndDetection.retarget_image")
+        with torch.inference_mode():
+            return self._process_impl(model, images, width, height, retarget_image)
+
+    def _process_impl(self, model, images, width, height, retarget_image=None):
         detector = model["yolo"]
         pose_model = model["vitpose"]
         dataset = model.get("dataset", "ap10k")
@@ -270,7 +302,15 @@ class DrawAnimalViTPose:
     CATEGORY = "WanAnimalPreprocess"
     DESCRIPTION = "Draws animal pose skeleton images from pose data (AP10k/APT36k format)."
 
+    @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        return hash_args_and_kwargs(**kwargs)
+
     def process(self, pose_data, width, height, body_stick_width, draw_head, retarget_padding=64):
+        with torch.inference_mode():
+            return self._process_impl(pose_data, width, height, body_stick_width, draw_head, retarget_padding)
+
+    def _process_impl(self, pose_data, width, height, body_stick_width, draw_head, retarget_padding=64):
         retarget_image = pose_data.get("retarget_image", None)
         pose_metas = pose_data["pose_metas"]
         dataset = pose_data.get("dataset", "ap10k")
@@ -333,7 +373,15 @@ class AnimalPoseRetargetPromptHelper:
     CATEGORY = "WanAnimalPreprocess"
     DESCRIPTION = "Generates text prompts for animal pose retargeting based on visibility of limbs in the template pose."
 
+    @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        return hash_args_and_kwargs(**kwargs)
+
     def process(self, pose_data):
+        with torch.inference_mode():
+            return self._process_impl(pose_data)
+
+    def _process_impl(self, pose_data):
         refer_pose_meta = pose_data.get("refer_pose_meta", None)
         if refer_pose_meta is None:
             return ("Change the animal to face forward.", "Change the animal to face forward.")
@@ -410,7 +458,17 @@ class AnimalPoseDetectionOneToAllAnimation:
     CATEGORY = "WanAnimalPreprocess"
     DESCRIPTION = "Specialized animal pose detection and alignment for OneToAllAnimation model. Detects animal poses from input images and aligns them based on a reference image if provided."
 
+    @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        return hash_args_and_kwargs(**kwargs)
+
     def process(self, model, images, width, height, align_to, draw_head, ref_image=None):
+        _validate_image_batch(images, "AnimalPoseDetectionOneToAllAnimation.images")
+        _validate_optional_image_batch(ref_image, "AnimalPoseDetectionOneToAllAnimation.ref_image")
+        with torch.inference_mode():
+            return self._process_impl(model, images, width, height, align_to, draw_head, ref_image)
+
+    def _process_impl(self, model, images, width, height, align_to, draw_head, ref_image=None):
         from .onetoall.infer_function import aaposemeta_to_dwpose, align_to_reference, align_to_pose
         from .onetoall.utils import draw_pose_aligned, warp_ref_to_pose
 
